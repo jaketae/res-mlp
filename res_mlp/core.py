@@ -49,7 +49,7 @@ class FeedForward(nn.Module):
         return out
 
 
-class ResidualMultiLayerPerceptron(nn.Module):
+class ResMLPLayer(nn.Module):
     def __init__(self, num_features, num_patches, expansion_factor):
         super().__init__()
         self.cl = CommunicationLayer(num_features, num_patches)
@@ -69,7 +69,7 @@ class ResMLP(nn.Module):
         in_channels=3,
         num_features=128,
         expansion_factor=2,
-        num_layers=6,
+        num_layers=8,
         num_classes=10,
     ):
         sqrt_num_patches, remainder = divmod(image_size, patch_size)
@@ -81,9 +81,7 @@ class ResMLP(nn.Module):
         )
         self.mlps = nn.Sequential(
             *[
-                ResidualMultiLayerPerceptron(
-                    num_features, num_patches, expansion_factor
-                )
+                ResMLPLayer(num_features, num_patches, expansion_factor)
                 for _ in range(num_layers)
             ]
         )
