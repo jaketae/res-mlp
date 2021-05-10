@@ -29,12 +29,13 @@ class CommunicationLayer(nn.Module):
         return out
 
 
-class TwoLayerResidualPerceptron(nn.Module):
-    def __init__(self, num_features):
+class FeedForward(nn.Module):
+    def __init__(self, num_features, expansion_factor):
         super().__init__()
+        num_hidden = num_features * expansion_factor
         self.aff1 = AffineTransform(num_features)
-        self.fc1 = nn.Linear(num_features, num_features)
-        self.fc2 = nn.Linear(num_features, num_features)
+        self.fc1 = nn.Linear(num_features, num_hidden)
+        self.fc2 = nn.Linear(num_hidden, num_features)
         self.aff2 = AffineTransform(num_features)
 
     def forward(self, x):
@@ -49,10 +50,10 @@ class TwoLayerResidualPerceptron(nn.Module):
 
 
 class ResidualMultiLayerPerceptron(nn.Module):
-    def __init__(self, num_features):
+    def __init__(self, num_features, expansion_factor):
         super().__init__()
         self.cl = CommunicationLayer(num_features)
-        self.ff = TwoLayerResidualPerceptron(num_features)
+        self.ff = FeedForward(num_features, expansion_factor)
 
     def forward(self, x):
         x = self.cl(x)
@@ -67,6 +68,7 @@ class ResMLP(nn.Module):
         patch_size=16,
         in_channels=3,
         num_features=128,
+        expansion_factor=2,
         num_layers=6,
         num_classes=10,
     ):
@@ -78,7 +80,10 @@ class ResMLP(nn.Module):
             in_channels, num_features, kernel_size=patch_size, stride=patch_size
         )
         self.mlps = nn.Sequential(
-            *[ResidualMultiLayerPerceptron() for _ in range(num_layers)]
+            *[
+                ResidualMultiLayerPerceptron(num_features, expansion_factor)
+                for _ in range(num_layers)
+            ]
         )
         self.classifier = nn.Linear(num_features, num_features)
 
