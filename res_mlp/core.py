@@ -14,10 +14,10 @@ class AffineTransform(nn.Module):
 
 
 class CommunicationLayer(nn.Module):
-    def __init__(self, num_features):
+    def __init__(self, num_features, num_patches):
         super().__init__()
         self.aff1 = AffineTransform(num_features)
-        self.fc1 = nn.Linear(num_features, num_features)
+        self.fc1 = nn.Linear(num_patches, num_patches)
         self.aff2 = AffineTransform(num_features)
 
     def forward(self, x):
@@ -50,9 +50,9 @@ class FeedForward(nn.Module):
 
 
 class ResidualMultiLayerPerceptron(nn.Module):
-    def __init__(self, num_features, expansion_factor):
+    def __init__(self, num_features, num_patches, expansion_factor):
         super().__init__()
-        self.cl = CommunicationLayer(num_features)
+        self.cl = CommunicationLayer(num_features, num_patches)
         self.ff = FeedForward(num_features, expansion_factor)
 
     def forward(self, x):
@@ -81,11 +81,13 @@ class ResMLP(nn.Module):
         )
         self.mlps = nn.Sequential(
             *[
-                ResidualMultiLayerPerceptron(num_features, expansion_factor)
+                ResidualMultiLayerPerceptron(
+                    num_features, num_patches, expansion_factor
+                )
                 for _ in range(num_layers)
             ]
         )
-        self.classifier = nn.Linear(num_features, num_features)
+        self.classifier = nn.Linear(num_features, num_classes)
 
     def forward(self, x):
         patches = self.patcher(x)
