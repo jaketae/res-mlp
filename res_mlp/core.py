@@ -61,6 +61,13 @@ class ResMLPLayer(nn.Module):
         return out
 
 
+def check_sizes(image_size, patch_size):
+    sqrt_num_patches, remainder = divmod(image_size, patch_size)
+    assert remainder == 0, "`image_size` must be divisibe by `patch_size`"
+    num_patches = sqrt_num_patches ** 2
+    return num_patches
+
+
 class ResMLP(nn.Module):
     def __init__(
         self,
@@ -72,9 +79,7 @@ class ResMLP(nn.Module):
         num_layers=8,
         num_classes=10,
     ):
-        sqrt_num_patches, remainder = divmod(image_size, patch_size)
-        assert remainder == 0, "`image_size` must be divisibe by `patch_size`"
-        num_patches = sqrt_num_patches ** 2
+        num_patches = check_sizes(image_size, patch_size)
         super().__init__()
         self.patcher = nn.Conv2d(
             in_channels, num_features, kernel_size=patch_size, stride=patch_size
